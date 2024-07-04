@@ -148,7 +148,7 @@ func (inst *TestResult) SetResult(result string) {
 	inst.result = result
 }
 
-func (inst *TestResult) Record(phase, format string, values ...any) {
+func (inst *TestResult) Record(phase, format string, values ...interface{}) {
 	inst.incr += 1
 
 	ts := time.Now().Format(TIME_LAYOUT)
@@ -158,7 +158,7 @@ func (inst *TestResult) Record(phase, format string, values ...any) {
 	inst.details[prefix] = content
 }
 
-func (inst *TestResult) RecordAsError(phase, format string, values ...any) {
+func (inst *TestResult) RecordAsError(phase, format string, values ...interface{}) {
 	inst.Record(phase, format, values...)
 	inst.result = TEST_RESULT_FAILED
 }
