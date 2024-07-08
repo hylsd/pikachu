@@ -2,8 +2,10 @@ package pikachu
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -18,6 +20,8 @@ const (
 	TEST_ASSERT_METHOD_LEN    = "{{len}}"
 	TEST_ASSERT_METHOD_IGNORE = "{{ignore}}"
 )
+
+const DEFAULT_REQUEST_TIMEOUT = 30 // 30 seconds
 
 type TestAssertRule struct {
 	sut      string
@@ -130,7 +134,24 @@ func NewAssertRule(sut, method, op string, expected interface{}) *TestAssertRule
 }
 
 type TestAssert struct {
-	rules map[string]*TestAssertRule
+	timeout int32
+	rules   map[string]*TestAssertRule
+}
+
+func (inst *TestAssert) SetTimeout(timeout int32) {
+	inst.timeout = timeout
+}
+
+func (inst *TestAssert) IsTimeout(start, end time.Time) error {
+	elapsed := end.Sub(start)
+	seconds := int32(elapsed.Seconds())
+
+	if seconds > inst.timeout {
+		msg := fmt.Sprintf("request timeout %d", seconds)
+		return errors.New(msg)
+	}
+
+	return nil
 }
 
 func (inst *TestAssert) AddRule(sut, method, op string, value interface{}) {
@@ -178,6 +199,7 @@ func (inst *TestAssert) Check(resp IProtoMessage, result *TestResult) {
 
 func NewTestAssert() *TestAssert {
 	return &TestAssert{
-		rules: make(map[string]*TestAssertRule, 0),
+		rules:   make(map[string]*TestAssertRule, 0),
+		timeout: DEFAULT_REQUEST_TIMEOUT,
 	}
 }

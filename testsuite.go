@@ -1,8 +1,7 @@
 package pikachu
 
 import (
-	"fmt"
-	"strings"
+	"time"
 )
 
 const (
@@ -70,8 +69,10 @@ func (inst *TestSuite) Run(args ...string) {
 
 func (inst *TestSuite) runTestCase(tc ITestCase, constructor func() (IProtoMessage, *TestAssert), result *TestResult) {
 	result.Record(TEST_PHASE_PREPARE, "started")
-	req, assert := constructor()
+	start := time.Now()
 
+	// 1. prepare
+	req, assert := constructor()
 	err := tc.Prepare()
 	if err != nil {
 		result.RecordAsError(TEST_PHASE_PREPARE, "failed")
@@ -79,18 +80,27 @@ func (inst *TestSuite) runTestCase(tc ITestCase, constructor func() (IProtoMessa
 	}
 	result.Record(TEST_PHASE_PREPARE, "finished")
 
+	// 4. cleanup
 	defer func() {
 		result.Record(TEST_PHASE_CLEANUP, "started")
 		tc.Cleanup()
 		result.Record(TEST_PHASE_CLEANUP, "finished")
 	}()
 
+	// 2. execute
 	result.Record(TEST_PHASE_EXECUTE, "started")
 	resp, err := tc.Execute(req)
 	result.Record(TEST_PHASE_EXECUTE, "finished")
-
 	if err != nil {
 		result.RecordAsError(TEST_PHASE_EXECUTE, "error response %s", err)
+		return
+	}
+
+	// 3. assert
+	// check if the request is timeout
+	end := time.Now()
+	if err = assert.IsTimeout(start, end); err != nil {
+		result.Record(TEST_PHASE_ASSERT, "request timeout %s", err)
 		return
 	}
 
@@ -110,49 +120,4 @@ func NewTestSuite(name string) *TestSuite {
 
 	regression[name] = ts
 	return ts
-}
-
-func AddTestCase(tsName string, testcase ITestCase) {
-	testsuite, exist := regression[tsName]
-	if !exist {
-		return
-	}
-
-	testsuite.AddTestCase(testcase)
-}
-
-func Run(testcase string) {
-	testReport := NewTestReport()
-	defer testReport.Done()
-
-	defer func() {
-		if r := recover(); r != nil {
-			testReport.Interrupt("encounter panic")
-		}
-		fmt.Println(testReport.Export())
-	}()
-
-	slices := strings.Split(testcase, ".")
-	if len(slices[0]) < 1 {
-		testReport.Interrupt("unspecified test suite")
-		return
-	}
-
-	testsuiteName := slices[0]
-	testsuite, exist := regression[testsuiteName]
-	if !exist {
-		testReport.Interrupt("test suite not exist")
-		return
-	}
-
-	testsuite.SetReport(testReport)
-	cnt := len(slices)
-	switch cnt {
-	case 1:
-		testsuite.Run(TC_SYNTAX_RUN_ALL)
-	case 2:
-		testsuite.Run(slices[1], TC_SYNTAX_RUN_ALL)
-	default:
-		testsuite.Run(slices[1], slices[2])
-	}
 }
