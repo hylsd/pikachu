@@ -3,7 +3,7 @@ package pikachu
 type ITestCase interface {
 	Prepare() error
 	Execute(IProtoMessage) (IProtoMessage, error)
-	Cleanup()
+	Cleanup() error
 	FlowMap() map[string]func() (IProtoMessage, *TestAssert)
 }
 
