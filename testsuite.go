@@ -25,8 +25,9 @@ type TestSuite struct {
 	testReport *TestReport
 }
 
-func (inst *TestSuite) AddTestCase(tc string, fc ITestCase) {
-	inst.testcases[tc] = fc
+func (inst *TestSuite) AddTestCase(testcase ITestCase) {
+	tcName := testcase.Name()
+	inst.testcases[tcName] = testcase
 }
 
 func (inst *TestSuite) Run(args ...string) {
@@ -109,6 +110,15 @@ func NewTestSuite(name string) *TestSuite {
 
 	regression[name] = ts
 	return ts
+}
+
+func AddTestCase(tsName string, testcase ITestCase) {
+	testsuite, exist := regression[tsName]
+	if !exist {
+		return
+	}
+
+	testsuite.AddTestCase(testcase)
 }
 
 func Run(testcase string) {

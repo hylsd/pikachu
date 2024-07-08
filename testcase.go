@@ -1,10 +1,12 @@
 package pikachu
 
 type ITestCase interface {
+	Name() string
+	FlowMap() map[string]func() (IProtoMessage, *TestAssert)
+
 	Prepare() error
 	Execute(IProtoMessage) (IProtoMessage, error)
 	Cleanup() error
-	FlowMap() map[string]func() (IProtoMessage, *TestAssert)
 }
 
 type TestCase struct {
@@ -12,12 +14,12 @@ type TestCase struct {
 	Response IProtoMessage
 	Error    error
 
-	tracer  *TestCaseTracer
+	name    string
 	flowmap map[string]func() (IProtoMessage, *TestAssert)
 }
 
-func (inst *TestCase) Tracer() *TestCaseTracer {
-	return inst.tracer
+func (inst *TestCase) Name() string {
+	return inst.name
 }
 
 func (inst *TestCase) FlowMap() map[string]func() (IProtoMessage, *TestAssert) {
