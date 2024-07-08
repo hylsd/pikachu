@@ -235,8 +235,13 @@ type TestSummary struct {
 func (inst *TestSummary) Calculate(result *TestResult) {
 	ts, tc, flow, ret := result.Result()
 	inst.testsuite[ts] = ts
+
+	tc = ts + tc
 	inst.testcase[tc] = tc
+
+	flow = tc + flow
 	inst.testflow[flow] = flow
+
 	_, exist := inst.result[ret]
 	if !exist {
 		inst.result[ret] = 1
