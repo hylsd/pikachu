@@ -30,14 +30,27 @@ func Run(testsuites string) {
 		testReport.Interrupt("unspecified test suite")
 		return
 	}
-
 	testsuiteName := slices[0]
-	testsuite, exist := regression[testsuiteName]
-	if !exist {
-		testReport.Interrupt("test suite not exist")
-		return
-	}
+	if testsuiteName == REG_SYNTAX_RUN_ALL {
+		for _, testsuite := range regression {
+			runTestSuite(testsuite, testReport, []string{"*"})
+		}
+	} else {
+		testsuite, exist := regression[testsuiteName]
+		if !exist {
+			testReport.Interrupt("test suite not exist")
+			return
+		}
 
+		if len(slices) > 1 {
+			runTestSuite(testsuite, testReport, slices[1:])
+		} else {
+			runTestSuite(testsuite, testReport, []string{"*"})
+		}
+	}
+}
+
+func runTestSuite(testsuite *TestSuite, testReport *TestReport, slices []string) {
 	testsuite.SetReport(testReport)
 	cnt := len(slices)
 	switch cnt {

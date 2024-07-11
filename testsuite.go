@@ -6,6 +6,7 @@ import (
 
 const (
 	TC_SYNTAX_RUN_ALL  = "*"
+	REG_SYNTAX_RUN_ALL = "all"
 	TEST_PHASE_PREPARE = "Prepare"
 	TEST_PHASE_EXECUTE = "Execute"
 	TEST_PHASE_ASSERT  = "Assert"
